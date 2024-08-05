@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { User } from "../models/user.model.js";
 import bcrypt, { hash } from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { Meeting } from "../models/meeting.model.js";
 
 
 const login = async (req, res) => {
@@ -31,9 +32,9 @@ const login = async (req, res) => {
         res.json({ message: e.message });
     }
 }
+
 const register = async (req, res) => {
     const { name, username, password } = req.body;
-
 
     try {
         const existingUser = await User.findOne({ username });
@@ -62,4 +63,16 @@ const createSecretToken = (id) => {
     });
 };
 
-export { login, register };
+
+const getAllRooms = async (req, res) => {
+    console.log('getall rooms called !');
+    try {
+        const { user_id } = req.body;
+        const meetings = await Meeting.find({ user_id });
+        if (!meetings) return res.status(httpStatus.NOT_FOUND).json({ message: 'no meetings found !', success: false });
+        return res.status(httpStatus.OK).json({ success: true, rooms: meetings });
+    } catch (err) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: err.message });
+    }
+}
+export { login, register, getAllRooms };

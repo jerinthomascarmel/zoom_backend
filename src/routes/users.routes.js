@@ -1,11 +1,10 @@
 import { Router } from "express";
-import { login, register } from "../controllers/user.controller.js";
+import { login, register,getAllRooms } from "../controllers/user.controller.js";
 
 const userRouter=Router();
 
 userRouter.route('/login').post(login)
 userRouter.route('/register').post(register) 
-userRouter.route('/add_to_activity')
-userRouter.route('/get_all_activity')
+userRouter.route('/get_all_activity').post(getAllRooms)
 
 export { userRouter };

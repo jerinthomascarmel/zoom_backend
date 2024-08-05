@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import express from "express";
 import { createServer } from "node:http";
-// import { connectToSocket } from "./controllers/socketManager.js";
 import { connectToSocket } from "./controllers/socketManager2.js";
 import cors from "cors";
 import { userRouter } from "./routes/users.routes.js";
+import { meetingRouter } from "./routes/meetings.routes.js";
 
 
 
@@ -18,9 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use('/users', userRouter);
-app.get('/' ,(req,res)=>{
+app.use('/meeting', meetingRouter);
+app.get('/', (req, res) => {
   res.send('this is root ');
 })
+
 const start = async () => {
   const connectionDb = await mongoose.connect(
     "mongodb+srv://jerinthomascarmel:W4jggQMg94QeVhIL@cluster0.zjpuung.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
@@ -31,4 +33,5 @@ const start = async () => {
     console.log("listening on port  8080");
   });
 };
+
 start();
