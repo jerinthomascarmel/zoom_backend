@@ -10,7 +10,8 @@ const meetingSchema = new Schema(
                 type: Schema.Types.ObjectId,
                 ref: 'chatMessage'
             }
-        ]
+        ],
+        transcripts: String
     }
 );
 

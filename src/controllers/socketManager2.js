@@ -2,6 +2,8 @@ import { Server } from "socket.io";
 import { ChatMessage } from "../models/chatmessage.model.js";
 import { Meeting } from "../models/meeting.model.js";
 
+
+let rooms = {}
 export const connectToSocket = (server) => {
     const io = new Server(server, {
         cors: {
@@ -65,12 +67,26 @@ export const connectToSocket = (server) => {
             io.to(to).emit('answerCall', { from: from, signal: signal });
         });
 
+        socket.on('on-speak', (data) => {
+            const { role, message, roomid } = data;
+            let transcripts = rooms[roomid] || [];
+
+            if (transcripts.length > 0 && transcripts[transcripts.length - 1].role == role) {
+                transcripts[transcripts.length - 1].message += '/n' + message;
+            } else {
+                transcripts.push({ role, message });
+            }
+
+            rooms[roomid] = transcripts;
+            console.log('onspeak :', rooms[roomid]);
+        })
+
 
         socket.on('disconnect', () => {
             console.log('Client disconnected !', socket.id);
         });
 
-        socket.on('leave-room', (roomId) => {
+        socket.on('leave-room', async (roomId) => {
             console.log('leave room triggered ! ');
             console.log(roomId)
             // Log current members in the room before broadcasting
@@ -78,6 +94,18 @@ export const connectToSocket = (server) => {
             if (roomSockets) {
                 console.log(`Broadcasting to members of room ${roomId}:`, Array.from(roomSockets));
             }
+
+            const meetingRoom = await Meeting.findOne({
+                meetingCode: roomId
+            });
+
+            let meetingTranscripts = meetingRoom.transcripts;
+            const newMessages = rooms[roomId] ? rooms[roomId].map(msg => `${msg.role} : ${msg.message}`).join("\n") : "";
+            meetingTranscripts += '/n' + newMessages;
+            meetingRoom.transcripts = meetingTranscripts;
+            rooms[roomId] = [];
+            delete rooms[roomId];
+            await meetingRoom.save();
 
             socket.leave(roomId);
             if (roomSockets) Array.from(roomSockets).forEach(element => {

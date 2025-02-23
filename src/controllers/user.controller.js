@@ -68,7 +68,15 @@ const getAllRooms = async (req, res) => {
     console.log('getall rooms called !');
     try {
         const { user_id } = req.body;
-        const meetings = await Meeting.find({ user_id });
+        const user = await User.findOne({ username: user_id })
+            .populate('joined_meetings')
+            .populate('created_meetings')
+            .exec();
+
+        const joined_meetings = user.joined_meetings;
+        const created_meetings = user.created_meetings;
+
+        const meetings = [...created_meetings, ...joined_meetings]
         if (!meetings) return res.status(httpStatus.NOT_FOUND).json({ message: 'no meetings found !', success: false });
         return res.status(httpStatus.OK).json({ success: true, rooms: meetings });
     } catch (err) {
